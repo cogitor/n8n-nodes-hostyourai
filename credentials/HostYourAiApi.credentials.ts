@@ -6,7 +6,7 @@ import type {
 	INodeProperties,
 	Icon,
 } from 'n8n-workflow';
-import { DEFAULT_BASE_URL, validateBaseUrl } from '../nodes/shared/hostYourAiConfig';
+import { DEFAULT_BASE_URL } from '../nodes/shared/hostYourAiConfig';
 
 export class HostYourAiApi implements ICredentialType {
 	name = 'hostYourAiApi';
@@ -26,18 +26,11 @@ export class HostYourAiApi implements ICredentialType {
 			required: true,
 			default: '',
 		},
-		{
-			displayName: 'Base URL',
-			name: 'url',
-			type: 'string',
-			default: DEFAULT_BASE_URL,
-			description: 'Base URL for HostYourAI OpenAI-compatible endpoint',
-		},
 	];
 
 	test: ICredentialTestRequest = {
 		request: {
-			baseURL: '={{$credentials?.url}}',
+			baseURL: DEFAULT_BASE_URL,
 			url: '/models',
 			method: 'GET',
 		},
@@ -47,10 +40,6 @@ export class HostYourAiApi implements ICredentialType {
 		credentials: ICredentialDataDecryptedObject,
 		requestOptions: IHttpRequestOptions,
 	): Promise<IHttpRequestOptions> {
-		const validation = validateBaseUrl(credentials.url);
-		if (!validation.isValid) {
-			throw new Error(validation.error);
-		}
 		requestOptions.headers ??= {};
 		requestOptions.headers.Authorization = `Bearer ${credentials.apiKey}`;
 		return requestOptions;

@@ -42,7 +42,7 @@ describe('HostYourAiChatModel', () => {
 	) =>
 		new HostYourAiChatModel(
 			modelId,
-			{ httpRequest, openStream: openStream ?? (async () => ({ body: emptyStream() })) },
+			{ httpRequest, openStream: openStream ?? (async () => ({ statusCode: 200, headers: {}, body: emptyStream() })) },
 			{ ...baseConfig, ...overrides },
 		);
 
@@ -97,7 +97,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
+			{ httpRequest, openStream: async () => ({ statusCode: 200, headers: {}, body: emptyStream() }) },
 			{ ...baseConfig, policy: 'cost', transport: 'body' },
 		);
 
@@ -218,7 +218,7 @@ describe('HostYourAiChatModel', () => {
 				body: { choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }] },
 			});
 
-		const model = new HostYourAiChatModel('hyai/auto', { httpRequest, openStream: async () => ({ body: emptyStream() }) }, baseConfig);
+		const model = new HostYourAiChatModel('hyai/auto', { httpRequest, openStream: async () => ({ statusCode: 200, headers: {}, body: emptyStream() }) }, baseConfig);
 
 		await model.generate(mkMessage());
 		expect(httpRequest).toHaveBeenCalledTimes(2);
@@ -245,7 +245,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
+			{ httpRequest, openStream: async () => ({ statusCode: 200, headers: {}, body: emptyStream() }) },
 			{ ...baseConfig, maxColdStartRetries: 1 },
 		);
 
@@ -262,7 +262,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
+			{ httpRequest, openStream: async () => ({ statusCode: 200, headers: {}, body: emptyStream() }) },
 			{ ...baseConfig, maxColdStartWaitSeconds: 3 },
 		);
 
@@ -284,7 +284,7 @@ describe('HostYourAiChatModel', () => {
 				body: { choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }] },
 			});
 
-		const model = new HostYourAiChatModel('hyai/auto', { httpRequest, openStream: async () => ({ body: emptyStream() }) }, baseConfig);
+		const model = new HostYourAiChatModel('hyai/auto', { httpRequest, openStream: async () => ({ statusCode: 200, headers: {}, body: emptyStream() }) }, baseConfig);
 		await model.generate(mkMessage());
 		expect(httpRequest).toHaveBeenCalledTimes(2);
 	});
@@ -306,7 +306,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
+			{ httpRequest, openStream: async () => ({ statusCode: 200, headers: {}, body: emptyStream() }) },
 			{ ...baseConfig, maxColdStartWaitSeconds: 1 },
 		);
 		await model.generate(mkMessage());
@@ -384,7 +384,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
+			{ httpRequest, openStream: async () => ({ statusCode: 200, headers: {}, body: emptyStream() }) },
 			{ ...baseConfig, maxColdStartWaitSeconds: 1 },
 		);
 		await model.generate(mkMessage());
@@ -407,7 +407,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
+			{ httpRequest, openStream: async () => ({ statusCode: 200, headers: {}, body: emptyStream() }) },
 			{ ...baseConfig, maxColdStartWaitSeconds: 3, maxColdStartRetries: 2 },
 		);
 
@@ -474,7 +474,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
+			{ httpRequest, openStream: async () => ({ statusCode: 200, headers: {}, body: emptyStream() }) },
 			{ ...baseConfig, maxColdStartRetries: Number.NaN, maxColdStartWaitSeconds: Number.NaN },
 		);
 
@@ -496,7 +496,7 @@ describe('HostYourAiChatModel', () => {
 			vi.fn(async () => okResponse()),
 			{},
 			'hyai/auto',
-			async () => ({ body: sseStream() }),
+			async () => ({ statusCode: 200, headers: {}, body: sseStream() }),
 		);
 
 		const chunks: Array<{ type: string; delta?: string; finishReason?: string; usage?: unknown }> = [];
@@ -529,6 +529,8 @@ describe('HostYourAiChatModel', () => {
 		}
 
 		const model = makeModel(vi.fn(async () => okResponse()), {}, 'hyai/auto', async () => ({
+			statusCode: 200,
+			headers: {},
 			body: sseStream(),
 		}));
 
@@ -549,6 +551,8 @@ describe('HostYourAiChatModel', () => {
 		}
 
 		const model = makeModel(vi.fn(async () => okResponse()), {}, 'hyai/auto', async () => ({
+			statusCode: 200,
+			headers: {},
 			body: sseStream(),
 		}));
 
@@ -566,6 +570,8 @@ describe('HostYourAiChatModel', () => {
 		}
 
 		const model = makeModel(vi.fn(async () => okResponse()), {}, 'hyai/auto', async () => ({
+			statusCode: 200,
+			headers: {},
 			body: sseStream(),
 		}));
 
@@ -586,6 +592,8 @@ describe('HostYourAiChatModel', () => {
 		}
 
 		const model = makeModel(vi.fn(async () => okResponse()), {}, 'hyai/auto', async () => ({
+			statusCode: 200,
+			headers: {},
 			body: sseStream(),
 		}));
 
@@ -618,6 +626,96 @@ describe('HostYourAiChatModel', () => {
 		await expect(run()).rejects.toThrow('stream failed');
 	});
 
+	it('retries streaming request with X-HYAI headers when body.hyai is rejected', async () => {
+		async function* successStream(): AsyncIterableIterator<Buffer> {
+			yield Buffer.from('data: {"choices":[{"delta":{"content":"ok"}}]}\n\n');
+			yield Buffer.from('data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\n');
+		}
+
+		const openStream = vi
+			.fn()
+			.mockResolvedValueOnce({
+				statusCode: 422,
+				headers: {},
+				body: {
+					detail: [
+						{ type: 'extra_forbidden', loc: ['body', 'hyai', 'task'], msg: 'Extra inputs are not permitted' },
+					],
+				},
+			})
+			.mockResolvedValueOnce({ statusCode: 200, headers: {}, body: successStream() });
+
+		const model = makeModel(
+			vi.fn(async () => okResponse()),
+			{ policy: 'cost', transport: 'body' },
+			'hyai/auto',
+			openStream,
+		);
+
+		const chunkTypes: string[] = [];
+		for await (const chunk of model.stream(mkMessage())) {
+			chunkTypes.push(chunk.type);
+		}
+
+		expect(chunkTypes).toEqual(['text-delta', 'finish']);
+		expect(openStream).toHaveBeenCalledTimes(2);
+
+		const firstBody = openStream.mock.calls[0]?.[2] as Record<string, unknown>;
+		const firstHeaders = openStream.mock.calls[0]?.[3] as Record<string, string>;
+		const secondBody = openStream.mock.calls[1]?.[2] as Record<string, unknown>;
+		const secondHeaders = openStream.mock.calls[1]?.[3] as Record<string, string>;
+
+		expect(firstBody.hyai).toEqual({ task: 'chat', policy: 'cost' });
+		expect(firstHeaders?.['X-HYAI-Task']).toBeUndefined();
+		expect(secondBody.hyai).toBeUndefined();
+		expect(secondHeaders['X-HYAI-Task']).toBe('chat');
+		expect(secondHeaders['X-HYAI-Policy']).toBe('cost');
+	});
+
+	it('retries streaming on 503 warmup responses', async () => {
+		async function* successStream(): AsyncIterableIterator<Buffer> {
+			yield Buffer.from('data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\n');
+		}
+
+		const openStream = vi
+			.fn()
+			.mockResolvedValueOnce({ statusCode: 503, headers: { 'retry-after': '0' }, body: { error: 'warming' } })
+			.mockResolvedValueOnce({ statusCode: 200, headers: {}, body: successStream() });
+
+		const model = makeModel(vi.fn(async () => okResponse()), {}, 'hyai/auto', openStream);
+		const chunkTypes: string[] = [];
+		for await (const chunk of model.stream(mkMessage())) {
+			chunkTypes.push(chunk.type);
+		}
+
+		expect(openStream).toHaveBeenCalledTimes(2);
+		expect(chunkTypes).toEqual(['finish']);
+	});
+
+	it('propagates mid-stream iterator errors after yielding prior chunks', async () => {
+		async function* brokenStream(): AsyncIterableIterator<Buffer> {
+			yield Buffer.from('data: {"choices":[{"delta":{"content":"partial"}}]}\n\n');
+			throw new Error('stream disconnected');
+		}
+
+		const model = makeModel(
+			vi.fn(async () => okResponse()),
+			{},
+			'hyai/auto',
+			async () => ({ statusCode: 200, headers: {}, body: brokenStream() }),
+		);
+
+		const seen: string[] = [];
+		const run = async () => {
+			for await (const chunk of model.stream(mkMessage())) {
+				seen.push(chunk.type);
+			}
+		};
+
+		await expect(run()).rejects.toThrow('stream disconnected');
+		expect(seen).toEqual(['text-delta']);
+	});
+
 	it('sends stream=true and router hints in headers transport for hyai/auto', async () => {
 		let capturedBody: Record<string, unknown> | undefined;
 		let capturedHeaders: Record<string, string> | undefined;
@@ -629,7 +727,7 @@ describe('HostYourAiChatModel', () => {
 			async (_method, _url, body, headers) => {
 				capturedBody = body as Record<string, unknown>;
 				capturedHeaders = headers;
-				return { body: emptyStream() };
+				return { statusCode: 200, headers: {}, body: emptyStream() };
 			},
 		);
 

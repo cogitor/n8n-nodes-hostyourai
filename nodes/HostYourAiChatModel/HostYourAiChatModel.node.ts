@@ -10,9 +10,9 @@ import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 import { supplyModel } from '@n8n/ai-node-sdk';
 import { HostYourAiChatModel as HostYourAiChatModelClient } from './model';
 import {
+	DEFAULT_BASE_URL,
 	DEFAULT_COLD_START_RETRIES,
 	DEFAULT_COLD_START_WAIT_SECONDS,
-	validateBaseUrl,
 } from '../shared/hostYourAiConfig';
 
 type TransportMode = 'body' | 'headers';
@@ -28,7 +28,7 @@ type ModelOptions = {
 	maxColdStartWaitSeconds?: number;
 };
 
-const AUTO_MODEL_LABEL = `Auto (${['hyai', 'auto'].join('/')})`;
+const AUTO_MODEL_LABEL = 'Auto (hyai/auto)';
 
 export class HostYourAiChatModel implements INodeType {
 	methods = {
@@ -40,12 +40,8 @@ export class HostYourAiChatModel implements INodeType {
 				};
 
 				try {
-					const credentials = await this.getCredentials('hostYourAiApi');
-					const validation = validateBaseUrl(credentials.url);
-					if (!validation.isValid) {
-						return [fallbackOption];
-					}
-					const baseUrl = validation.baseUrl;
+					await this.getCredentials('hostYourAiApi');
+					const baseUrl = DEFAULT_BASE_URL;
 
 					const response = (await this.helpers.httpRequestWithAuthentication.call(this, 'hostYourAiApi', {
 						method: 'GET',
@@ -227,7 +223,6 @@ export class HostYourAiChatModel implements INodeType {
 	};
 
 	async supplyData(this: ISupplyDataFunctions, itemIndex: number) {
-		const credentials = await this.getCredentials('hostYourAiApi');
 		const rawModelName = this.getNodeParameter('model', itemIndex) as string;
 		const modelName = typeof rawModelName === 'string' ? rawModelName.trim() : '';
 		const options = this.getNodeParameter('options', itemIndex, {}) as ModelOptions;
@@ -236,13 +231,7 @@ export class HostYourAiChatModel implements INodeType {
 			throw new NodeOperationError(this.getNode(), 'Model is required', { itemIndex });
 		}
 
-		const validation = validateBaseUrl(credentials.url);
-		if (!validation.isValid) {
-			throw new NodeOperationError(this.getNode(), `Invalid Base URL: ${validation.error}`, {
-				itemIndex,
-			});
-		}
-		const baseUrl = validation.baseUrl;
+		const baseUrl = DEFAULT_BASE_URL;
 
 		const model = new HostYourAiChatModelClient(
 			modelName,
@@ -278,10 +267,18 @@ export class HostYourAiChatModel implements INodeType {
 						headers,
 						encoding: 'stream',
 						json: false,
-					})) as unknown as AsyncIterableIterator<Buffer | Uint8Array>;
+						returnFullResponse: true,
+						ignoreHttpStatusErrors: true,
+					})) as {
+						body: unknown;
+						headers?: Record<string, string | number | string[]>;
+						statusCode: number;
+					};
 
 					return {
-						body: response,
+						body: response.body,
+						headers: response.headers ?? {},
+						statusCode: response.statusCode,
 					};
 				},
 			},

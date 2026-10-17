@@ -66,7 +66,7 @@ interface RequestConfig {
 		url: string,
 		body?: object,
 		headers?: Record<string, string>,
-	) => Promise<{ body: AsyncIterableIterator<Buffer | Uint8Array> }>;
+	) => Promise<RequestResult>;
 }
 
 type StreamDelta = {
@@ -130,6 +130,31 @@ function readHeader(
 		if (key.toLowerCase() === lowered) return value;
 	}
 	return undefined;
+}
+
+function normalizeResponseBody(body: unknown): unknown {
+	if (typeof body === 'string') {
+		try {
+			return JSON.parse(body) as unknown;
+		} catch {
+			return body;
+		}
+	}
+
+	if (body instanceof Uint8Array) {
+		const decoded = new TextDecoder().decode(body);
+		try {
+			return JSON.parse(decoded) as unknown;
+		} catch {
+			return decoded;
+		}
+	}
+
+	return body;
+}
+
+function isAsyncByteIterable(value: unknown): value is AsyncIterableIterator<Buffer | Uint8Array> {
+	return typeof value === 'object' && value !== null && Symbol.asyncIterator in value;
 }
 
 export class HostYourAiChatModel extends BaseChatModel<ModelConfig> {
@@ -243,7 +268,8 @@ export class HostYourAiChatModel extends BaseChatModel<ModelConfig> {
 			const maybeEntry = entry as { type?: unknown; loc?: unknown };
 			if (maybeEntry.type !== 'extra_forbidden') return false;
 			if (!Array.isArray(maybeEntry.loc) || maybeEntry.loc.length < 2) return false;
-			return maybeEntry.loc[0] === 'body' && maybeEntry.loc[1] === 'hyai';
+			if (maybeEntry.loc[0] !== 'body') return false;
+			return maybeEntry.loc.slice(1).includes('hyai');
 		});
 	}
 
@@ -283,6 +309,7 @@ export class HostYourAiChatModel extends BaseChatModel<ModelConfig> {
 		body: Record<string, unknown>,
 		headers: Record<string, string>,
 		merged: ModelConfig,
+		requester: RequestConfig['httpRequest'] | RequestConfig['openStream'] = this.requests.httpRequest,
 	): Promise<RequestResult> {
 		const maxRetries = clampInt(
 			merged.maxColdStartRetries,
@@ -303,16 +330,17 @@ export class HostYourAiChatModel extends BaseChatModel<ModelConfig> {
 		let hyaiBodyFallbackApplied = false;
 
 		while (true) {
-			const response = await this.requests.httpRequest(
+			const response = await requester(
 				'POST',
 				`${this.baseURL}/chat/completions`,
 				requestBody,
 				requestHeaders,
 			);
+			const normalizedBody = normalizeResponseBody(response.body);
 
 			if (
 				!hyaiBodyFallbackApplied &&
-				this.shouldFallbackHyaiBodyToHeaders(response.statusCode, response.body, merged)
+				this.shouldFallbackHyaiBodyToHeaders(response.statusCode, normalizedBody, merged)
 			) {
 				const fallbackRequest = this.moveHyaiRoutingToHeaders(requestBody, requestHeaders, merged);
 				requestBody = fallbackRequest.body;
@@ -343,11 +371,11 @@ export class HostYourAiChatModel extends BaseChatModel<ModelConfig> {
 			}
 
 			if (response.statusCode < 200 || response.statusCode >= 300) {
-				const detail = sanitizeErrorDetail(response.body);
+				const detail = sanitizeErrorDetail(normalizedBody);
 				throw new Error(`HostYourAI request failed (${response.statusCode}): ${detail}`);
 			}
 
-			return response;
+			return { ...response, body: normalizedBody };
 		}
 	}
 
@@ -382,12 +410,16 @@ export class HostYourAiChatModel extends BaseChatModel<ModelConfig> {
 		const merged = { ...this.configDefaults, ...config } as ModelConfig;
 		const request = this.buildRequest(messages, merged);
 		request.body.stream = true;
-		const streamResponse = await this.requests.openStream(
-			'POST',
-			`${this.baseURL}/chat/completions`,
+		const streamResponse = await this.requestWithWarmupRetry(
 			request.body,
 			request.headers,
+			merged,
+			this.requests.openStream,
 		);
+
+		if (!isAsyncByteIterable(streamResponse.body)) {
+			throw new Error('Malformed HostYourAI stream response: expected stream body');
+		}
 
 		let finished = false;
 
@@ -411,9 +443,10 @@ export class HostYourAiChatModel extends BaseChatModel<ModelConfig> {
 				}
 
 				if (choice.finish_reason) {
+					const finishReason = this.mapFinishReason(choice.finish_reason ?? undefined) ?? 'other';
 					yield {
 						type: 'finish',
-						finishReason: this.mapFinishReason(choice.finish_reason) ?? 'other',
+						finishReason,
 						usage: this.parseUsage(payload.usage),
 					};
 					finished = true;

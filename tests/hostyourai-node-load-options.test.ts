@@ -31,7 +31,7 @@ describe('HostYourAiChatModel node loadOptions', () => {
 		}));
 
 		const ctx = {
-			getCredentials: vi.fn(async () => ({ url: 'https://hostyourai.com/api/v1' })),
+			getCredentials: vi.fn(async () => ({})),
 			helpers: {
 				httpRequestWithAuthentication: {
 					call,
@@ -59,7 +59,7 @@ describe('HostYourAiChatModel node loadOptions', () => {
 		]);
 	});
 
-	it('deduplicates ids, ignores invalid ids, and trims trailing slash in base URL', async () => {
+	it('deduplicates ids and ignores invalid ids from /models response', async () => {
 		const node = new HostYourAiChatModel();
 		const call = vi.fn(async () => ({
 			data: [
@@ -72,7 +72,7 @@ describe('HostYourAiChatModel node loadOptions', () => {
 		}));
 
 		const ctx = {
-			getCredentials: vi.fn(async () => ({ url: 'https://hostyourai.com/api/v1/' })),
+			getCredentials: vi.fn(async () => ({})),
 			helpers: {
 				httpRequestWithAuthentication: {
 					call,
@@ -95,9 +95,9 @@ describe('HostYourAiChatModel node loadOptions', () => {
 		]);
 	});
 
-	it('uses default base URL when credential URL is empty or whitespace', async () => {
+	it('uses default base URL for /models requests', async () => {
 		const node = new HostYourAiChatModel();
-		const { ctx, call } = makeContext(async () => ({ url: '   ' }), async () => ({ data: [] }));
+		const { ctx, call } = makeContext(async () => ({}), async () => ({ data: [] }));
 
 		await node.methods.loadOptions.getModels.call(ctx as never);
 		expect(call).toHaveBeenCalledWith(
@@ -112,13 +112,13 @@ describe('HostYourAiChatModel node loadOptions', () => {
 	it.each([
 		[
 			'provider responds with no models',
-			async () => ({ url: 'https://hostyourai.com/api/v1' }),
+			async () => ({}),
 			async () => ({}),
 			true,
 		],
 		[
 			'/models payload shape is malformed',
-			async () => ({ url: 'https://hostyourai.com/api/v1' }),
+			async () => ({}),
 			async () => ({ data: { id: 'not-an-array' } }),
 			true,
 		],
@@ -135,12 +135,6 @@ describe('HostYourAiChatModel node loadOptions', () => {
 			async () => {
 				throw new Error('missing credentials');
 			},
-			async () => ({}),
-			false,
-		],
-		[
-			'credential URL host is not allowed',
-			async () => ({ url: 'https://example.com/api/v1' }),
 			async () => ({}),
 			false,
 		],

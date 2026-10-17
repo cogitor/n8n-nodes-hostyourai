@@ -60,7 +60,7 @@ Further reference on community-node installations can be found [here](https://do
 
 ## Credentials setup (HostYourAI API)
 
-Create a credential of type `HostYourAI API` in n8n and set API Key and Base URL (default: `https://hostyourai.com/api/v1`).
+Create a credential of type `HostYourAI API` in n8n and set API Key. The node uses `https://hostyourai.com/api/v1` as the fixed base URL.
 
 How to get key + base URL:
 
@@ -121,7 +121,7 @@ Quick decision guide:
 
 - Credential test fails
   - Re-check API key value.
-  - Re-check Base URL (`https://hostyourai.com/api/v1`).
+  - This node always uses `https://hostyourai.com/api/v1`; verify the endpoint is reachable from your n8n runtime.
   - Confirm key is active in HostYourAI API keys page.
 
 ## References
