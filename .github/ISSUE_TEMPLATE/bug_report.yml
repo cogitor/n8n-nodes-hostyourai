@@ -1,0 +1,96 @@
+name: Bug report
+description: Report a bug in the HostYourAI n8n community node
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this issue.
+        Please include enough detail for us to reproduce it.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: One-line description of the bug
+      placeholder: AI Agent fails when using HostYourAI Chat Model with hyai/auto
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps, including node config and workflow setup
+      placeholder: |
+        1. Add AI Agent node
+        2. Add HostYourAI Chat Model node and connect it
+        3. Select model hyai/auto
+        4. Run workflow
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: Workflow completes and returns model output
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: Workflow fails with 422 body.hyai extra_forbidden
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error logs / stack trace
+      description: Paste the full error text from n8n execution logs
+      render: shell
+
+  - type: input
+    id: package_version
+    attributes:
+      label: Package version
+      description: Version of @cogitor/n8n-nodes-hostyourai
+      placeholder: 0.2.3
+    validations:
+      required: true
+
+  - type: input
+    id: n8n_version
+    attributes:
+      label: n8n version
+      placeholder: 1.114.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: n8n deployment
+      options:
+        - Docker
+        - n8n Cloud
+        - npm local install
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: Ubuntu 24.04
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
+      description: Screenshots, minimal workflow JSON, workarounds, etc.
