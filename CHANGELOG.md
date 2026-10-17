@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.2.3] - 2026-10-17
+
+### Changed
+- Added EU flag emoji in README sovereign-hosting section heading.
+- Aligned npm provenance settings with npm guidance for third-party release tooling.
+- Added `publishConfig.provenance=true` in `package.json` and `NPM_CONFIG_PROVENANCE=true` in publish workflow.
+
 ## [0.2.2] - 2026-10-17
 
 ### Changed
