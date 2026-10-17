@@ -431,4 +431,126 @@ describe('HostYourAiChatModel', () => {
 			},
 		]);
 	});
+
+	it('ignores malformed JSON SSE events and continues streaming', async () => {
+		async function* sseStream(): AsyncIterableIterator<Buffer> {
+			yield Buffer.from('data: this-is-not-json\n\n');
+			yield Buffer.from('data: {"choices":[{"delta":{"content":"ok"}}]}\n\n');
+			yield Buffer.from('data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\n');
+		}
+
+		const model = makeModel(vi.fn(async () => okResponse()), {}, 'hyai/auto', async () => ({
+			body: sseStream(),
+		}));
+
+		const chunks: Array<{ type: string; delta?: string }> = [];
+		for await (const chunk of model.stream(mkMessage())) {
+			chunks.push({ type: chunk.type, delta: 'delta' in chunk ? chunk.delta : undefined });
+		}
+
+		expect(chunks).toEqual([
+			{ type: 'text-delta', delta: 'ok' },
+			{ type: 'finish', delta: undefined },
+		]);
+	});
+
+	it('emits fallback finish once when stream only sends [DONE]', async () => {
+		async function* sseStream(): AsyncIterableIterator<Buffer> {
+			yield Buffer.from('data: [DONE]\n\n');
+		}
+
+		const model = makeModel(vi.fn(async () => okResponse()), {}, 'hyai/auto', async () => ({
+			body: sseStream(),
+		}));
+
+		const chunkTypes: string[] = [];
+		for await (const chunk of model.stream(mkMessage())) {
+			chunkTypes.push(chunk.type);
+		}
+
+		expect(chunkTypes).toEqual(['finish']);
+	});
+
+	it('handles events with missing choices without crashing', async () => {
+		async function* sseStream(): AsyncIterableIterator<Buffer> {
+			yield Buffer.from('data: {"usage":{"prompt_tokens":1}}\n\n');
+		}
+
+		const model = makeModel(vi.fn(async () => okResponse()), {}, 'hyai/auto', async () => ({
+			body: sseStream(),
+		}));
+
+		const chunkTypes: string[] = [];
+		for await (const chunk of model.stream(mkMessage())) {
+			chunkTypes.push(chunk.type);
+		}
+
+		expect(chunkTypes).toEqual(['finish']);
+	});
+
+	it('joins array delta content parts in stream chunks', async () => {
+		async function* sseStream(): AsyncIterableIterator<Buffer> {
+			yield Buffer.from(
+				'data: {"choices":[{"delta":{"content":[{"type":"output_text","text":"He"},{"type":"output_text","text":"llo"}]}}]}\n\n',
+			);
+			yield Buffer.from('data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\n');
+		}
+
+		const model = makeModel(vi.fn(async () => okResponse()), {}, 'hyai/auto', async () => ({
+			body: sseStream(),
+		}));
+
+		const textDeltas: string[] = [];
+		for await (const chunk of model.stream(mkMessage())) {
+			if (chunk.type === 'text-delta') {
+				textDeltas.push(chunk.delta);
+			}
+		}
+
+		expect(textDeltas).toEqual(['Hello']);
+	});
+
+	it('propagates openStream errors', async () => {
+		const model = makeModel(
+			vi.fn(async () => okResponse()),
+			{},
+			'hyai/auto',
+			async () => {
+				throw new Error('stream failed');
+			},
+		);
+
+		const run = async () => {
+			for await (const _chunk of model.stream(mkMessage())) {
+				void _chunk;
+			}
+		};
+
+		await expect(run()).rejects.toThrow('stream failed');
+	});
+
+	it('sends stream=true and router hints in headers transport for hyai/auto', async () => {
+		let capturedBody: Record<string, unknown> | undefined;
+		let capturedHeaders: Record<string, string> | undefined;
+
+		const model = makeModel(
+			vi.fn(async () => okResponse()),
+			{ transport: 'headers' },
+			'hyai/auto',
+			async (_method, _url, body, headers) => {
+				capturedBody = body as Record<string, unknown>;
+				capturedHeaders = headers;
+				return { body: emptyStream() };
+			},
+		);
+
+		for await (const _chunk of model.stream(mkMessage())) {
+			void _chunk;
+		}
+
+		expect(capturedBody?.stream).toBe(true);
+		expect(capturedBody?.hyai).toBeUndefined();
+		expect(capturedHeaders?.['X-HYAI-Task']).toBe('chat');
+		expect(capturedHeaders?.['X-HYAI-Policy']).toBe('balanced');
+	});
 });
