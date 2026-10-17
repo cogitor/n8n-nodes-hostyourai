@@ -108,65 +108,29 @@ For warm-up responses, the node handles HTTP 503 with bounded retries.
 
 ## Node parameters
 
-### Model Name or ID
+Important:
 
-Default: `hyai/auto`
+- Task, Policy, and Transport apply only when Model = `hyai/auto`.
 
-- Loads model IDs from HostYourAI `/models`
-- Expression input is supported for custom IDs
+| Parameter | Default | Allowed values / range | Applies when | What it does |
+|---|---|---|---|---|
+| Model Name or ID | `hyai/auto` | Any model ID returned by `/models` (expression input supported) | Always | Selects fixed model or router mode (`hyai/auto`). |
+| Sampling Temperature | `0.7` | `0.0` to `2.0` | Always | Controls output randomness. |
+| Task | `chat` | `chat`, `code`, `summarise`, `classify`, `extract`, `rag`, `legal`, `reason` | Model = `hyai/auto` | Routing hint for use-case intent. |
+| Policy | `balanced` | `balanced`, `speed`, `cost`, `quality` | Model = `hyai/auto` | Optimizes router behavior for speed/cost/quality balance. |
+| Transport | `body` | `body`, `headers` | Model = `hyai/auto` | Sends task/policy in JSON (`hyai`) or headers (`X-HYAI-*`). |
+| Max Cold-Start Retries | `4` | `0` to `30` | Always | Retry count for HTTP 503 warm-up responses. |
+| Max Cold-Start Wait (Seconds) | `90` | `1` to `600` | Always | Maximum cumulative warm-up wait budget. |
 
-### Options
+Retry behavior notes:
 
-#### Sampling Temperature
+- Warm-up retry hints are read from `Retry-After` and `X-HYAI-ETA-Seconds`.
+- If wait budget is exhausted, the request fails with a warm-up error.
 
-Default: `0.7`
-Range: `0.0` to `2.0`
+Quick decision guide:
 
-Controls output randomness.
-
-#### Task
-
-Default: `chat`
-Values: `chat`, `code`, `summarise`, `classify`, `extract`, `rag`, `legal`, `reason`
-
-Routing hint for HostYourAI router.
-
-Applied only when Model = `hyai/auto`.
-
-#### Policy
-
-Default: `balanced`
-Values: `balanced`, `speed`, `cost`, `quality`
-
-Routing policy for HostYourAI router.
-
-Applied only when Model = `hyai/auto`.
-
-#### Transport
-
-Default: `body`
-Values:
-
-- `body` -> sends `hyai: { task, policy }` in request JSON
-- `headers` -> sends `X-HYAI-Task` and `X-HYAI-Policy`
-
-Applied only when Model = `hyai/auto`.
-
-#### Max Cold-Start Retries
-
-Default: `4`
-Range: `0` to `30`
-
-Retries when HostYourAI returns HTTP 503 warm-up responses.
-
-#### Max Cold-Start Wait (Seconds)
-
-Default: `90`
-Range: `1` to `600`
-
-Maximum cumulative wait across warm-up retries.
-
-The node uses retry hints from `Retry-After` and `X-HYAI-ETA-Seconds` when present.
+- Want predictable behavior from one model -> choose a fixed model ID.
+- Want automatic routing across warm models -> choose `hyai/auto`, then set Task + Policy.
 
 ## Quick usage patterns
 
