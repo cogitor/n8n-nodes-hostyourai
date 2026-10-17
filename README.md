@@ -1,5 +1,7 @@
 # n8n-nodes-hostyourai
 
+Official HostYourAI site: https://hostyourai.com
+
 HostYourAI Chat Model for n8n AI workflows.
 
 This community package adds one AI Language Model node:
