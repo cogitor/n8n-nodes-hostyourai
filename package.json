@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"description": "HostYourAI chat model node for n8n AI Agent workflows",
 	"license": "MIT",
-	"homepage": "https://github.com/cogitor/n8n-nodes-hostyourai#readme",
+	"homepage": "https://hostyourai.com/app/docs",
 	"keywords": [
 		"n8n-community-node-package",
 		"hostyourai",

@@ -40,5 +40,7 @@ Create `HostYourAI API` credentials with:
 
 ## Resources
 
-- HostYourAI docs: https://hostyourai.com/app/docs
+- Official HostYourAI docs (canonical, most up to date): https://hostyourai.com/app/docs
+- HostYourAI API base URL used by this node: https://hostyourai.com/api/v1
 - n8n community nodes docs: https://docs.n8n.io/integrations/#community-nodes
+- Bug reports for this node: https://github.com/cogitor/n8n-nodes-hostyourai/issues
