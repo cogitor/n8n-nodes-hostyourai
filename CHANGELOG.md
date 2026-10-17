@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.2.1] - 2026-10-17
+
+### Changed
+- Renamed npm package to scoped name `@cogitor/n8n-nodes-hostyourai` before first publish.
+- Updated installation docs, node metadata JSON, and lock/package manifests to use the scoped package name.
+- Updated publish workflow for scoped-package first publish using explicit `npm publish --access public --provenance`.
+
 ## [0.2.0] - 2026-10-17
 
 ### Added

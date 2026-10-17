@@ -1,4 +1,4 @@
-# n8n-nodes-hostyourai
+# @cogitor/n8n-nodes-hostyourai
 
 A [HostYourAI](https://hostyourai.com) Chat Model for n8n AI workflows.
 
@@ -43,7 +43,7 @@ From the n8n UI:
 
 1. Go to Settings -> Community Nodes.
 2. Select Install.
-3. Enter package name: `n8n-nodes-hostyourai`
+3. Enter package name: `@cogitor/n8n-nodes-hostyourai`
 4. Confirm installation.
 5. Restart n8n (or your container/service) if your setup does not auto-reload community packages.
 
@@ -51,7 +51,7 @@ Manual install:
 
 ```bash
 cd ~/.n8n/nodes
-npm i n8n-nodes-hostyourai
+npm i @cogitor/n8n-nodes-hostyourai
 ```
 
 Then restart n8n. After restart, search for "HostYourAI Chat Model" in the node panel.

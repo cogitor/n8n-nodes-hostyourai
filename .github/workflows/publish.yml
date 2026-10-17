@@ -7,9 +7,8 @@
 #
 # ─── PREREQUISITES ─────────────────────────────────────────────────────────────
 #
-# @n8n/node-cli ≥ 0.23.0 is required. Earlier versions do not support the
-# provenance flag passed by `npm run release` in CI, and the publish step will
-# fail. Check the version installed in this project with:
+# @n8n/node-cli must be installed so `n8n-node lint`, `n8n-node build`, and
+# `n8n-node prerelease` are available in CI.
 #
 #   npm list @n8n/node-cli
 #
@@ -45,12 +44,15 @@
 #
 # ─── RELEASE PROCESS ───────────────────────────────────────────────────────────
 #
-# Run the following command locally to start an interactive release:
+# For scoped packages, first publish must be explicit public access.
+# This workflow publishes with:
 #
-#   npm run release
+#   npm publish --access public --provenance
 #
-# This will lint, build, prompt for a version bump, update the changelog,
-# commit, tag, and push — which triggers this workflow to publish to npm.
+# Release flow:
+#   1) Bump version + changelog locally
+#   2) Commit and push to main
+#   3) Push semver tag (for example 0.2.1) to trigger this workflow
 
 name: Publish
 
@@ -84,16 +86,16 @@ jobs:
       - name: Install dependencies
         run: 'npm ci'
 
-      - name: Release
-        # Publishes to npm with a provenance attestation (requires id-token: write above).
-        # Lint and build run automatically as part of the release process.
-        #
-        # Option A (OIDC): leave NPM_TOKEN unset — the token step is skipped and
-        #   npm uses the OIDC exchange instead.
-        # Option B (token): set NPM_TOKEN in repo secrets — it is written to
-        #   .npmrc here before publishing.
+      - name: Publish
+        # Publishes a scoped package explicitly as public with provenance attestation.
+        # Option A (OIDC): leave NPM_TOKEN unset — npm uses OIDC exchange.
+        # Option B (token): set NPM_TOKEN in repo secrets.
         run: |
           [ -n "$NPM_TOKEN" ] && npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
-          npm run release
+          npm run lint
+          npm run build
+          npm run prepublishOnly
+          npm publish --access public --provenance
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+

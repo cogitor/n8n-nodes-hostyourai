@@ -1,5 +1,5 @@
 {
-	"node": "n8n-nodes-hostyourai",
+	"node": "@cogitor/n8n-nodes-hostyourai",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": ["Development"],
