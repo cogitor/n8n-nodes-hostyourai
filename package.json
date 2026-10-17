@@ -61,6 +61,7 @@
 		"n8n-workflow": "*"
 	},
 	"publishConfig": {
-		"access": "public"
+		"access": "public",
+		"provenance": true
 	}
 }
