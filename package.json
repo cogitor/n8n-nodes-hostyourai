@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-hostyourai",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "HostYourAI chat model node for n8n AI Agent workflows",
 	"license": "MIT",
 	"homepage": "https://hostyourai.com/app/docs",
