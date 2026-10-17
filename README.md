@@ -117,11 +117,6 @@ Quick decision guide:
 4. Select credentials, then choose fixed model or `hyai/auto`.
 5. If using `hyai/auto`, set Task and Policy.
 
-## Limitations
-
-- Streaming is supported for SSE-compatible `chat/completions` responses.
-- Some providers send token usage only on the final chunk; if absent, usage may not be available in stream finish metadata.
-
 ## Troubleshooting
 
 - Credential test fails
