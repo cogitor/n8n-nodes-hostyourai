@@ -19,32 +19,25 @@ This node gives you both paths in one place:
 - pin a specific open-weight model from `/models`
 - or use `hyai/auto` router mode and let HostYourAI select a model for each request
 
-## Two key HostYourAI features (important)
+## Core HostYourAI features (high level)
 
-### 1) Sovereignty Mode per API key ("EU only")
+1) EU Sovereignty Mode per API key
 
-HostYourAI lets you enforce fully European routing per key via the "EU only" switch (Sovereignty Mode).
+- You can enable "EU only" on a key to enforce sovereign routing.
+- This is configured in HostYourAI (key-level setting), then used by this node.
+- Official docs: https://hostyourai.com/faq and https://hostyourai.com/docs/management-api
 
-Practical impact:
+2) `hyai/auto` router with parameter-based optimization
 
-- Create/select the API key in HostYourAI (`https://hostyourai.com/app/api-keys`)
-- Enable "EU only" on that key when you need strict sovereign routing
-- Use that key in this n8n credential
+- `hyai/auto` can select an available warm model automatically.
+- You can steer optimization with Task + Policy parameters.
+- Parameter details are documented below in "Node parameters".
+- Official docs: https://hostyourai.com/faq and https://hostyourai.com/en/service/openai-compatible-api
 
-So policy is attached to the key, not implemented in this node.
+3) Bring your own model
 
-### 2) `hyai/auto` router with task + policy optimization
-
-When you set Model to `hyai/auto`, HostYourAI router selects a model automatically.
-
-In this node, you can steer routing with:
-
-- Policy: `balanced` (default), `cost`, `speed`, `quality`
-- Task: `chat` (default), `code`, `summarise`, `classify`, `extract`, `rag`, `legal`, `reason`
-
-This lets you optimize for your use case without pinning a single model ID.
-
-Note: Task and Policy are applied only when Model = `hyai/auto`.
+- You can run pinned/open models from the catalog, and HostYourAI also supports dedicated/own model paths.
+- Official docs: https://hostyourai.com/models and https://hostyourai.com/docs/management-api
 
 ## Installation
 
