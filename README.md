@@ -12,6 +12,10 @@ This community package adds one AI Language Model node:
 
 Use it in AI Agent and other n8n AI pipelines through the `ai_languageModel` output.
 
+## Usage example (AI Agent)
+
+![HostYourAI Chat Model connected to n8n AI Agent](https://github.com/user-attachments/assets/a5537fba-a260-422b-9549-f9ec150dd72b)
+
 ## Why HostYourAI?
 
 ### 🇪🇺 EU Sovereign hosting of openweight LLM models
