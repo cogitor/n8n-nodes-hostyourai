@@ -9,9 +9,11 @@
 		"hostyourai",
 		"ai-agent",
 		"llm",
+		"llm-hosting",
+		"model-hosting",
 		"eu-sovereignty",
 		"eu-hosting",
-		"gdpr"
+		"openai-compatible"
 	],
 	"author": {
 		"name": "Emil Varga",
