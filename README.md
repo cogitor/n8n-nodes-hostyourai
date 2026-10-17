@@ -36,7 +36,7 @@ Read more: [EU Inference Router](https://hostyourai.com/en/service/eu-inference-
 You can steer optimization with Task + Policy parameters.
 Parameter details are documented below in "Node parameters".
 
-Read more: [EU Router](https://hostyourai.com/en/service/eu-inference-router)
+Read more: [HostYourAI docs (auto mode)](https://hostyourai.com/app/docs)
 
 ### Bring your own model
 ---
