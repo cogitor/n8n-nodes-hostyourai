@@ -14,7 +14,7 @@ Use it in AI Agent and other n8n AI pipelines through the `ai_languageModel` out
 
 ## Why HostYourAI?
 
-### EU Sovereign hosting of openweight LLM models
+### 🇪🇺 EU Sovereign hosting of openweight LLM models
 
 - Enable "EU only" on a key to enforce sovereign routing.
 - This is configured in HostYourAI's key-level setting, then used by this node.
