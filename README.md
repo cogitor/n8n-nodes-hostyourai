@@ -6,7 +6,43 @@ This community package adds one AI Language Model node:
 
 - HostYourAI Chat Model
 
-It is built for HostYourAI's OpenAI-compatible router endpoint and plugs into n8n AI nodes (for example AI Agent) through the `ai_languageModel` output.
+Use it in AI Agent and other n8n AI pipelines through the `ai_languageModel` output.
+
+## Why this node
+
+HostYourAI is OpenAI-compatible, so you can use it as a drop-in replacement for OpenAI-style integrations (same `/chat/completions` shape, different base URL + key).
+
+This node gives you both paths in one place:
+
+- pin a specific open-weight model from `/models`
+- or use `hyai/auto` router mode and let HostYourAI select a model for each request
+
+## Two key HostYourAI features (important)
+
+### 1) Sovereignty Mode per API key ("EU only")
+
+HostYourAI lets you enforce fully European routing per key via the "EU only" switch (Sovereignty Mode).
+
+Practical impact:
+
+- Create/select the API key in HostYourAI (`https://hostyourai.com/app/api-keys`)
+- Enable "EU only" on that key when you need strict sovereign routing
+- Use that key in this n8n credential
+
+So policy is attached to the key, not implemented in this node.
+
+### 2) `hyai/auto` router with task + policy optimization
+
+When you set Model to `hyai/auto`, HostYourAI router selects a model automatically.
+
+In this node, you can steer routing with:
+
+- Policy: `balanced` (default), `cost`, `speed`, `quality`
+- Task: `chat` (default), `code`, `summarise`, `classify`, `extract`, `rag`, `legal`, `reason`
+
+This lets you optimize for your use case without pinning a single model ID.
+
+Note: Task and Policy are applied only when Model = `hyai/auto`.
 
 ## Installation
 
@@ -41,34 +77,32 @@ Create a credential of type `HostYourAI API` in n8n and set:
 - API Key
 - Base URL (default: `https://hostyourai.com/api/v1`)
 
-How to get the API key and base URL (from HostYourAI docs/FAQ):
+How to get key + base URL:
 
 1. Log in to HostYourAI.
 2. Open API keys: `https://hostyourai.com/app/api-keys`
 3. Create a key.
-4. Use the shown base URL (normally `https://hostyourai.com/api/v1`).
+4. Copy the shown base URL (normally `https://hostyourai.com/api/v1`).
+5. Optional but important: enable "EU only" on that key if required.
 
-This node sends your API key in the HTTP Authorization header.
+This node sends your API key as a Bearer token in the Authorization header.
 
-Notes:
+Validation and test behavior:
 
 - Base URL must be HTTPS.
-- Base URL host must be `hostyourai.com` or a subdomain of it.
+- Base URL host must be `hostyourai.com` or a subdomain.
 - Credential test calls `GET /models` on the configured base URL.
 
 ## Node behavior
 
-The node sends requests to:
+The node uses OpenAI-compatible endpoints:
 
-- `POST /chat/completions`
+- `GET /models` (model picker)
+- `POST /chat/completions` (inference)
 
-and returns a standard chat-model output for n8n AI pipelines.
+If model loading fails, the Model field still offers fallback `hyai/auto`.
 
-Model discovery in the Model field uses:
-
-- `GET /models`
-
-If model loading fails, the node still offers a safe fallback model: `hyai/auto`.
+For warm-up responses, the node handles HTTP 503 with bounded retries.
 
 ## Node parameters
 
@@ -76,8 +110,8 @@ If model loading fails, the node still offers a safe fallback model: `hyai/auto`
 
 Default: `hyai/auto`
 
-- Loads available model IDs from HostYourAI `/models`.
-- You can also provide a model ID via expression.
+- Loads model IDs from HostYourAI `/models`
+- Expression input is supported for custom IDs
 
 ### Options
 
@@ -86,7 +120,7 @@ Default: `hyai/auto`
 Default: `0.7`
 Range: `0.0` to `2.0`
 
-Controls randomness in model output.
+Controls output randomness.
 
 #### Task
 
@@ -95,7 +129,7 @@ Values: `chat`, `code`, `summarise`, `classify`, `extract`, `rag`, `legal`, `rea
 
 Routing hint for HostYourAI router.
 
-Important: this is applied only when Model is `hyai/auto`.
+Applied only when Model = `hyai/auto`.
 
 #### Policy
 
@@ -104,40 +138,55 @@ Values: `balanced`, `speed`, `cost`, `quality`
 
 Routing policy for HostYourAI router.
 
-Important: this is applied only when Model is `hyai/auto`.
+Applied only when Model = `hyai/auto`.
 
 #### Transport
 
 Default: `body`
 Values:
 
-- `body` -> sends `task` and `policy` in JSON as `hyai: { task, policy }`
+- `body` -> sends `hyai: { task, policy }` in request JSON
 - `headers` -> sends `X-HYAI-Task` and `X-HYAI-Policy`
 
-Important: this is applied only when Model is `hyai/auto`.
+Applied only when Model = `hyai/auto`.
 
 #### Max Cold-Start Retries
 
 Default: `4`
 Range: `0` to `30`
 
-When HostYourAI returns HTTP 503 (warm-up), the node retries up to this limit.
+Retries when HostYourAI returns HTTP 503 warm-up responses.
 
 #### Max Cold-Start Wait (Seconds)
 
 Default: `90`
 Range: `1` to `600`
 
-Maximum cumulative wait budget for warm-up retries.
+Maximum cumulative wait across warm-up retries.
 
-The node honors retry hints from `Retry-After` and `X-HYAI-ETA-Seconds` when present.
+The node uses retry hints from `Retry-After` and `X-HYAI-ETA-Seconds` when present.
+
+## Quick usage patterns
+
+### A) Drop-in OpenAI-style usage
+
+- Use your HostYourAI key + base URL
+- Pick a concrete model from Model list
+- Keep your existing AI workflow shape
+
+### B) Router-optimized usage (`hyai/auto`)
+
+- Set Model to `hyai/auto`
+- Pick Task and Policy
+- Let HostYourAI choose the model per request
 
 ## Usage with AI Agent
 
 1. Add AI Agent node.
 2. Add HostYourAI Chat Model node.
 3. Connect HostYourAI Chat Model to AI Agent model input.
-4. Select credentials and model/options.
+4. Select credentials, then choose fixed model or `hyai/auto`.
+5. If using `hyai/auto`, set Task and Policy.
 
 ## Limitations
 
@@ -146,21 +195,23 @@ The node honors retry hints from `Retry-After` and `X-HYAI-ETA-Seconds` when pre
 
 ## Troubleshooting
 
-- "Invalid Base URL":
+- "Invalid Base URL"
   - Ensure HTTPS.
   - Ensure host is `hostyourai.com` (or subdomain).
-- Credential test fails:
+- Credential test fails
   - Re-check API key value.
   - Re-check Base URL (`https://hostyourai.com/api/v1`).
   - Confirm key is active in HostYourAI API keys page.
-- Model list does not load:
-  - Node will fall back to `hyai/auto`; you can still run requests.
+- Model list does not load
+  - Node falls back to `hyai/auto`; requests can still run.
+- `hyai/auto` settings seem ignored
+  - Confirm Model is exactly `hyai/auto`.
 
-## Links
+## References
 
-- HostYourAI FAQ (API key and base URL): https://hostyourai.com/faq
-- HostYourAI Management API docs: https://hostyourai.com/docs/management-api
+- HostYourAI FAQ (OpenAI compatibility, API key/base URL, Sovereignty Mode, hyai/auto): https://hostyourai.com/faq
 - HostYourAI OpenAI-compatible API page: https://hostyourai.com/en/service/openai-compatible-api
+- HostYourAI Management API docs: https://hostyourai.com/docs/management-api
 - HostYourAI model catalog: https://hostyourai.com/models
 - n8n community node install docs: https://docs.n8n.io/integrations/community-nodes/installation/
 
