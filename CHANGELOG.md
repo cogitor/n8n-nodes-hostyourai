@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.2.2] - 2026-10-17
+
+### Changed
+- Adjusted publish workflow for scoped package release to run `npm run release` with explicit `npm config set access public`.
+- Keeps n8n release flow (`n8n-node release`) while enforcing public access for scoped npm publish.
+
 ## [0.2.1] - 2026-10-17
 
 ### Changed

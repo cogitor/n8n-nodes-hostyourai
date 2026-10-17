@@ -1,6 +1,6 @@
 {
 	"name": "@cogitor/n8n-nodes-hostyourai",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"description": "HostYourAI chat model node for n8n AI Agent workflows",
 	"license": "MIT",
 	"homepage": "https://hostyourai.com/app/docs",
