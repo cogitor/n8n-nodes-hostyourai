@@ -27,7 +27,7 @@ This node gives you both paths in one place:
 Enable "EU only" on a key to enforce sovereign routing.
 This is configured in HostYourAI (key-level setting), then used by this node.
 
-Read more: [Sovereignty Mode (FAQ)](https://hostyourai.com/faq)
+Read more: [EU Inference Router](https://hostyourai.com/en/service/eu-inference-router)
 
 ### `hyai/auto` router with parameter-based optimization
 ---
