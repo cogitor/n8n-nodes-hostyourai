@@ -229,6 +229,39 @@ export class HostYourAiChatModel extends BaseChatModel<ModelConfig> {
 		};
 	}
 
+	private shouldFallbackHyaiBodyToHeaders(statusCode: number, body: unknown, merged: ModelConfig): boolean {
+		if (statusCode !== 422) return false;
+		if (this.modelId !== 'hyai/auto') return false;
+		if ((merged.transport ?? 'body') !== 'body') return false;
+		if (!body || typeof body !== 'object') return false;
+
+		const detail = (body as { detail?: unknown }).detail;
+		if (!Array.isArray(detail)) return false;
+
+		return detail.some((entry) => {
+			if (!entry || typeof entry !== 'object') return false;
+			const maybeEntry = entry as { type?: unknown; loc?: unknown };
+			if (maybeEntry.type !== 'extra_forbidden') return false;
+			if (!Array.isArray(maybeEntry.loc) || maybeEntry.loc.length < 2) return false;
+			return maybeEntry.loc[0] === 'body' && maybeEntry.loc[1] === 'hyai';
+		});
+	}
+
+	private moveHyaiRoutingToHeaders(
+		body: Record<string, unknown>,
+		headers: Record<string, string>,
+		merged: ModelConfig,
+	): { body: Record<string, unknown>; headers: Record<string, string> } {
+		const nextBody = { ...body };
+		delete nextBody.hyai;
+
+		const nextHeaders = { ...headers };
+		nextHeaders['X-HYAI-Task'] = merged.task ?? 'chat';
+		nextHeaders['X-HYAI-Policy'] = merged.policy ?? 'balanced';
+
+		return { body: nextBody, headers: nextHeaders };
+	}
+
 	private mapFinishReason(reason: string | undefined): GenerateResult['finishReason'] {
 		switch (reason) {
 			case 'length':
@@ -265,14 +298,28 @@ export class HostYourAiChatModel extends BaseChatModel<ModelConfig> {
 		);
 		let waited = 0;
 		let attempt = 0;
+		let requestBody = { ...body };
+		let requestHeaders = { ...headers };
+		let hyaiBodyFallbackApplied = false;
 
 		while (true) {
 			const response = await this.requests.httpRequest(
 				'POST',
 				`${this.baseURL}/chat/completions`,
-				body,
-				headers,
+				requestBody,
+				requestHeaders,
 			);
+
+			if (
+				!hyaiBodyFallbackApplied &&
+				this.shouldFallbackHyaiBodyToHeaders(response.statusCode, response.body, merged)
+			) {
+				const fallbackRequest = this.moveHyaiRoutingToHeaders(requestBody, requestHeaders, merged);
+				requestBody = fallbackRequest.body;
+				requestHeaders = fallbackRequest.headers;
+				hyaiBodyFallbackApplied = true;
+				continue;
+			}
 
 			if (response.statusCode === 503) {
 				if (attempt >= maxRetries) {

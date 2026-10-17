@@ -72,6 +72,95 @@ describe('HostYourAiChatModel', () => {
 		expect(capturedHeaders?.['X-HYAI-Policy']).toBeUndefined();
 	});
 
+	it('falls back to X-HYAI headers when body.hyai is rejected with 422 extra_forbidden', async () => {
+		const httpRequest = vi
+			.fn()
+			.mockResolvedValueOnce({
+				statusCode: 422,
+				headers: {},
+				body: {
+					detail: [
+						{
+							type: 'extra_forbidden',
+							loc: ['body', 'hyai'],
+							msg: 'Extra inputs are not permitted',
+							input: { task: 'chat', policy: 'cost' },
+						},
+					],
+				},
+			})
+			.mockResolvedValueOnce({
+				statusCode: 200,
+				headers: {},
+				body: { choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }] },
+			});
+
+		const model = new HostYourAiChatModel(
+			'hyai/auto',
+			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
+			{ ...baseConfig, policy: 'cost', transport: 'body' },
+		);
+
+		await model.generate(mkMessage());
+		expect(httpRequest).toHaveBeenCalledTimes(2);
+
+		const firstCallBody = httpRequest.mock.calls[0]?.[2] as Record<string, unknown>;
+		const firstCallHeaders = httpRequest.mock.calls[0]?.[3] as Record<string, string>;
+		const secondCallBody = httpRequest.mock.calls[1]?.[2] as Record<string, unknown>;
+		const secondCallHeaders = httpRequest.mock.calls[1]?.[3] as Record<string, string>;
+
+		expect(firstCallBody?.hyai).toEqual({ task: 'chat', policy: 'cost' });
+		expect(firstCallHeaders?.['X-HYAI-Task']).toBeUndefined();
+		expect(firstCallHeaders?.['X-HYAI-Policy']).toBeUndefined();
+
+		expect(secondCallBody?.hyai).toBeUndefined();
+		expect(secondCallHeaders?.['X-HYAI-Task']).toBe('chat');
+		expect(secondCallHeaders?.['X-HYAI-Policy']).toBe('cost');
+	});
+
+	it('does not fallback for unrelated 422 errors', async () => {
+		const model = makeModel(
+			vi.fn(async () => ({
+				statusCode: 422,
+				headers: {},
+				body: { detail: [{ type: 'missing', loc: ['body', 'messages'] }] },
+			})),
+		);
+
+		await expect(model.generate(mkMessage())).rejects.toThrow('HostYourAI request failed (422)');
+	});
+
+	it('does not fallback for non-auto models', async () => {
+		const model = makeModel(
+			vi.fn(async () => ({
+				statusCode: 422,
+				headers: {},
+				body: {
+					detail: [{ type: 'extra_forbidden', loc: ['body', 'hyai'] }],
+				},
+			})),
+			{ transport: 'body' },
+			'gpt-4o-mini',
+		);
+
+		await expect(model.generate(mkMessage())).rejects.toThrow('HostYourAI request failed (422)');
+	});
+
+	it('does not fallback when transport is already headers', async () => {
+		const model = makeModel(
+			vi.fn(async () => ({
+				statusCode: 422,
+				headers: {},
+				body: {
+					detail: [{ type: 'extra_forbidden', loc: ['body', 'hyai'] }],
+				},
+			})),
+			{ transport: 'headers' },
+		);
+
+		await expect(model.generate(mkMessage())).rejects.toThrow('HostYourAI request failed (422)');
+	});
+
 	it('applies hyai headers when model is hyai/auto and transport=headers', async () => {
 		let capturedBody: Record<string, unknown> | undefined;
 		let capturedHeaders: Record<string, string> | undefined;
