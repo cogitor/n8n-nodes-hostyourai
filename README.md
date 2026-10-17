@@ -1,8 +1,6 @@
 # n8n-nodes-hostyourai
 
-Official HostYourAI site: https://hostyourai.com
-
-HostYourAI Chat Model for n8n AI workflows.
+A [HostYourAI](https://hostyourai.com) Chat Model for n8n AI workflows.
 
 This community package adds one AI Language Model node:
 
@@ -10,40 +8,37 @@ This community package adds one AI Language Model node:
 
 Use it in AI Agent and other n8n AI pipelines through the `ai_languageModel` output.
 
-## Why this node
+## Why HostYourAI?
 
-HostYourAI is OpenAI-compatible, so you can use it as a drop-in replacement for OpenAI-style integrations (same `/chat/completions` shape, different base URL + key).
+### EU Sovereign hosting of openweight LLM models
 
-This node gives you both paths in one place:
-
-- pin a specific open-weight model from `/models`
-- or use `hyai/auto` router mode and let HostYourAI select a model for each request
-
-## Core HostYourAI features
-
-### EU Sovereignty Mode per API key
----
-
-Enable "EU only" on a key to enforce sovereign routing.
-This is configured in HostYourAI (key-level setting), then used by this node.
+- Enable "EU only" on a key to enforce sovereign routing.
+- This is configured in HostYourAI's key-level setting, then used by this node.
 
 Read more: [EU Inference Router](https://hostyourai.com/en/service/eu-inference-router)
 
-### `hyai/auto` router with parameter-based optimization
----
+### Automatic model choice with parameter-based optimization
 
-`hyai/auto` can select an available warm model automatically.
-You can steer optimization with Task + Policy parameters.
-Parameter details are documented below in "Node parameters".
+- Use the `hyai/auto` model option to automatically select an available warm model.
+- You can steer optimization with Task + Policy parameters.
+- Parameter details are documented below in [Node parameters](./#nodeparameters).
 
 Read more: [HostYourAI docs (auto mode)](https://hostyourai.com/app/docs)
 
 ### Bring your own model
----
 
-You can run pinned/open models from the catalog, and HostYourAI also supports dedicated/own model paths.
+- You can run any open model from the model catalog, or host dedicated/own models from HuggingFace.
 
-Read more: [Dedicated GPU instances (bring your own model)](https://hostyourai.com/en/service/dedicated-gpu-instances) and [Model catalog](https://hostyourai.com/models)
+Read more: [Dedicated GPU instances (bring your own model)](https://hostyourai.com/en/service/dedicated-gpu-instances)
+
+## Why this node?
+
+[HostYourAI](https://hostyourai.com) is OpenAI-compatible, so you can use it without a separate node. You can configure the URL and the API keys as a drop-in replacement for OpenAI-style integrations (same `/chat/completions` shape, different base URL + key).
+
+This node is already pre-configured to use the HostYourAI host URL and allows you to:
+
+- pin a specific open-weight model from the `/models` endpoint if you want or
+- use the Auto router mode (`hyai/auto`) to let HostYourAI select an optimised model for each request
 
 ## Installation
 
