@@ -19,25 +19,31 @@ This node gives you both paths in one place:
 - pin a specific open-weight model from `/models`
 - or use `hyai/auto` router mode and let HostYourAI select a model for each request
 
-## Core HostYourAI features (high level)
+## Core HostYourAI features
 
-1) EU Sovereignty Mode per API key
+### EU Sovereignty Mode per API key
+---
 
-- You can enable "EU only" on a key to enforce sovereign routing.
-- This is configured in HostYourAI (key-level setting), then used by this node.
-- Official docs: https://hostyourai.com/faq and https://hostyourai.com/docs/management-api
+Enable "EU only" on a key to enforce sovereign routing.
+This is configured in HostYourAI (key-level setting), then used by this node.
 
-2) `hyai/auto` router with parameter-based optimization
+Read more: [Sovereignty Mode (FAQ)](https://hostyourai.com/faq)
 
-- `hyai/auto` can select an available warm model automatically.
-- You can steer optimization with Task + Policy parameters.
-- Parameter details are documented below in "Node parameters".
-- Official docs: https://hostyourai.com/faq and https://hostyourai.com/en/service/openai-compatible-api
+### `hyai/auto` router with parameter-based optimization
+---
 
-3) Bring your own model
+`hyai/auto` can select an available warm model automatically.
+You can steer optimization with Task + Policy parameters.
+Parameter details are documented below in "Node parameters".
 
-- You can run pinned/open models from the catalog, and HostYourAI also supports dedicated/own model paths.
-- Official docs: https://hostyourai.com/models and https://hostyourai.com/docs/management-api
+Read more: [EU Router](https://hostyourai.com/en/service/eu-inference-router)
+
+### Bring your own model
+---
+
+You can run pinned/open models from the catalog, and HostYourAI also supports dedicated/own model paths.
+
+Read more: [Model catalog](https://hostyourai.com/models) and [Management API](https://hostyourai.com/docs/management-api)
 
 ## Installation
 
