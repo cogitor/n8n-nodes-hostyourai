@@ -43,7 +43,7 @@ Read more: [HostYourAI docs (auto mode)](https://hostyourai.com/app/docs)
 
 You can run pinned/open models from the catalog, and HostYourAI also supports dedicated/own model paths.
 
-Read more: [Model catalog](https://hostyourai.com/models) and [Management API](https://hostyourai.com/docs/management-api)
+Read more: [Dedicated GPU instances (bring your own model)](https://hostyourai.com/en/service/dedicated-gpu-instances) and [Model catalog](https://hostyourai.com/models)
 
 ## Installation
 
