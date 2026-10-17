@@ -1,0 +1,66 @@
+{
+	"name": "n8n-nodes-hostyourai",
+	"version": "0.1.0",
+	"description": "HostYourAI chat model node for n8n AI Agent workflows",
+	"license": "MIT",
+	"homepage": "https://github.com/cogitor/n8n-nodes-hostyourai#readme",
+	"keywords": [
+		"n8n-community-node-package",
+		"hostyourai",
+		"ai-agent",
+		"llm",
+		"eu-sovereignty",
+		"eu-hosting",
+		"gdpr"
+	],
+	"author": {
+		"name": "Emil Varga",
+		"email": "emil.varga@gmail.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/cogitor/n8n-nodes-hostyourai.git"
+	},
+	"bugs": {
+		"url": "https://github.com/cogitor/n8n-nodes-hostyourai/issues"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"test": "vitest run",
+		"release": "n8n-node release",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"aiNodeSdkVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/HostYourAiApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/HostYourAiChatModel/HostYourAiChatModel.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "*",
+		"eslint": "9.32.0",
+		"prettier": "3.6.2",
+		"release-it": "^21.1.0",
+		"typescript": "5.9.2",
+		"vitest": "^5.0.5"
+	},
+	"peerDependencies": {
+		"@n8n/ai-node-sdk": "*",
+		"n8n-workflow": "*"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}
