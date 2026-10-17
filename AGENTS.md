@@ -91,6 +91,7 @@ Load these before working on the relevant area:
 | A programmatic-style node            | above + `.agents/nodes-programmatic.md`                             |
 | Files in `credentials/`              | `.agents/credentials.md`                                            |
 | Adding a new version to a node       | `.agents/versioning.md`                                             |
+| Releasing a package                  | `.agents/release-checklist.md`                                      |
 | Starting a new task or planning      | `.agents/workflow.md`                                               |
 
 ## Additional resources
