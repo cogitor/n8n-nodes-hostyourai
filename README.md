@@ -35,14 +35,9 @@ Read more: [Dedicated GPU instances (bring your own model)](https://hostyourai.c
 
 [HostYourAI](https://hostyourai.com) is OpenAI-compatible, so you can use it without a separate node. You can configure the URL and the API keys as a drop-in replacement for OpenAI-style integrations (same `/chat/completions` shape, different base URL + key).
 
-This node is already pre-configured to use the HostYourAI host URL and allows you to:
-
-- pin a specific open-weight model from the `/models` endpoint if you want or
-- use the Auto router mode (`hyai/auto`) to let HostYourAI select an optimised model for each request
+To make things easy out-of-box, this node is already pre-configured to use the HostYourAI host URL and allows you to use the Auto router mode (`hyai/auto`) to let HostYourAI select an optimised model for each request.
 
 ## Installation
-
-Community nodes are available on self-hosted n8n.
 
 From the n8n UI:
 
@@ -59,35 +54,23 @@ cd ~/.n8n/nodes
 npm i n8n-nodes-hostyourai
 ```
 
-Then restart n8n.
+Then restart n8n. After restart, search for "HostYourAI Chat Model" in the node panel.
 
-After restart, search for "HostYourAI Chat Model" in the node panel.
-
-Reference for community-node install behavior:
-https://docs.n8n.io/integrations/community-nodes/installation/
+Further reference on community-node installations can be found [here](https://docs.n8n.io/integrations/community-nodes/installation/).
 
 ## Credentials setup (HostYourAI API)
 
-Create a credential of type `HostYourAI API` in n8n and set:
-
-- API Key
-- Base URL (default: `https://hostyourai.com/api/v1`)
+Create a credential of type `HostYourAI API` in n8n and set API Key and Base URL (default: `https://hostyourai.com/api/v1`).
 
 How to get key + base URL:
 
-1. Log in to HostYourAI.
-2. Open API keys: `https://hostyourai.com/app/api-keys`
+1. Log in to [HostYourAI](https://hostyourai.com/app/dashboard).
+2. Open [API keys](https://hostyourai.com/app/api-keys).
 3. Create a key.
-4. Copy the shown base URL (normally `https://hostyourai.com/api/v1`).
-5. Optional but important: enable "EU only" on that key if required.
+4. Enable "EU only" on that key if required.
+5. Copy the shown base URL (normally `https://hostyourai.com/api/v1`).
 
 This node sends your API key as a Bearer token in the Authorization header.
-
-Validation and test behavior:
-
-- Base URL must be HTTPS.
-- Base URL host must be `hostyourai.com` or a subdomain.
-- Credential test calls `GET /models` on the configured base URL.
 
 ## Node behavior
 
@@ -126,20 +109,6 @@ Quick decision guide:
 - Want predictable behavior from one model -> choose a fixed model ID.
 - Want automatic routing across warm models -> choose `hyai/auto`, then set Task + Policy.
 
-## Quick usage patterns
-
-### A) Drop-in OpenAI-style usage
-
-- Use your HostYourAI key + base URL
-- Pick a concrete model from Model list
-- Keep your existing AI workflow shape
-
-### B) Router-optimized usage (`hyai/auto`)
-
-- Set Model to `hyai/auto`
-- Pick Task and Policy
-- Let HostYourAI choose the model per request
-
 ## Usage with AI Agent
 
 1. Add AI Agent node.
@@ -155,17 +124,10 @@ Quick decision guide:
 
 ## Troubleshooting
 
-- "Invalid Base URL"
-  - Ensure HTTPS.
-  - Ensure host is `hostyourai.com` (or subdomain).
 - Credential test fails
   - Re-check API key value.
   - Re-check Base URL (`https://hostyourai.com/api/v1`).
   - Confirm key is active in HostYourAI API keys page.
-- Model list does not load
-  - Node falls back to `hyai/auto`; requests can still run.
-- `hyai/auto` settings seem ignored
-  - Confirm Model is exactly `hyai/auto`.
 
 ## References
 
@@ -177,4 +139,4 @@ Quick decision guide:
 
 ## License
 
-MIT
+[MIT](./LICENSE)
