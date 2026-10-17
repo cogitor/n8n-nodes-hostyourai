@@ -21,7 +21,7 @@ Read more: [EU Inference Router](https://hostyourai.com/en/service/eu-inference-
 
 - Use the `hyai/auto` model option to automatically select an available warm model.
 - You can steer optimization with Task + Policy parameters.
-- Parameter details are documented below in [Node parameters](./#nodeparameters).
+- Parameter details are documented below in [Node parameters](./#node-parameters).
 
 Read more: [HostYourAI docs (auto mode)](https://hostyourai.com/app/docs)
 
