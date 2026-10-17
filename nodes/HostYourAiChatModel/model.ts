@@ -1,10 +1,12 @@
 import { sleep, type IHttpRequestMethods } from 'n8n-workflow';
 import {
 	BaseChatModel,
+	parseSSEStream,
 	type ChatModelConfig,
 	type GenerateResult,
 	type Message,
 	type StreamChunk,
+	type TokenUsage,
 } from '@n8n/ai-node-sdk';
 import {
 	DEFAULT_COLD_START_RETRIES,
@@ -59,7 +61,31 @@ interface RequestConfig {
 		body?: object,
 		headers?: Record<string, string>,
 	) => Promise<RequestResult>;
+	openStream: (
+		method: IHttpRequestMethods,
+		url: string,
+		body?: object,
+		headers?: Record<string, string>,
+	) => Promise<{ body: AsyncIterableIterator<Buffer | Uint8Array> }>;
 }
+
+type StreamDelta = {
+	content?: string | Array<{ type?: string; text?: string }>;
+};
+
+type StreamChoice = {
+	delta?: StreamDelta;
+	finish_reason?: string | null;
+};
+
+type StreamResponse = {
+	choices?: StreamChoice[];
+	usage?: {
+		prompt_tokens?: number;
+		completion_tokens?: number;
+		total_tokens?: number;
+	};
+};
 
 function toSeconds(value: unknown): number | undefined {
 	if (Array.isArray(value)) return toSeconds(value[0]);
@@ -181,6 +207,28 @@ export class HostYourAiChatModel extends BaseChatModel<ModelConfig> {
 		return undefined;
 	}
 
+	private parseStreamDeltaText(choice: StreamChoice): string | undefined {
+		const content = choice.delta?.content;
+		if (typeof content === 'string' && content.length > 0) {
+			return content;
+		}
+		if (Array.isArray(content)) {
+			const joined = content
+				.map((part) => (typeof part?.text === 'string' ? part.text : ''))
+				.join('');
+			return joined.length > 0 ? joined : undefined;
+		}
+		return undefined;
+	}
+
+	private parseUsage(usage: CompletionResponse['usage'] | StreamResponse['usage']): TokenUsage {
+		return {
+			promptTokens: usage?.prompt_tokens ?? 0,
+			completionTokens: usage?.completion_tokens ?? 0,
+			totalTokens: usage?.total_tokens ?? 0,
+		};
+	}
+
 	private mapFinishReason(reason: string | undefined): GenerateResult['finishReason'] {
 		switch (reason) {
 			case 'length':
@@ -278,19 +326,64 @@ export class HostYourAiChatModel extends BaseChatModel<ModelConfig> {
 		return {
 			id: body.id,
 			finishReason: this.mapFinishReason(body.choices?.[0]?.finish_reason),
-			usage: {
-				promptTokens: body.usage?.prompt_tokens ?? 0,
-				completionTokens: body.usage?.completion_tokens ?? 0,
-				totalTokens: body.usage?.total_tokens ?? 0,
-			},
+			usage: this.parseUsage(body.usage),
 			message,
 		};
 	}
 
 	async *stream(messages: Message[], config?: ModelConfig): AsyncIterable<StreamChunk> {
-		void messages;
-		void config;
-		yield* [];
-		throw new Error('HostYourAI streaming is not supported by this node yet. Use non-streaming mode.');
+		const merged = { ...this.configDefaults, ...config } as ModelConfig;
+		const request = this.buildRequest(messages, merged);
+		request.body.stream = true;
+		const streamResponse = await this.requests.openStream(
+			'POST',
+			`${this.baseURL}/chat/completions`,
+			request.body,
+			request.headers,
+		);
+
+		let finished = false;
+
+		for await (const event of parseSSEStream(streamResponse.body)) {
+			if (!event.data || event.data === '[DONE]') {
+				continue;
+			}
+
+			let payload: StreamResponse;
+			try {
+				payload = JSON.parse(event.data) as StreamResponse;
+			} catch {
+				continue;
+			}
+
+			const choices = Array.isArray(payload.choices) ? payload.choices : [];
+			for (const choice of choices) {
+				const deltaText = this.parseStreamDeltaText(choice);
+				if (deltaText) {
+					yield { type: 'text-delta', delta: deltaText };
+				}
+
+				if (choice.finish_reason) {
+					yield {
+						type: 'finish',
+						finishReason: this.mapFinishReason(choice.finish_reason) ?? 'other',
+						usage: this.parseUsage(payload.usage),
+					};
+					finished = true;
+					break;
+				}
+			}
+
+			if (finished) {
+				break;
+			}
+		}
+
+		if (!finished) {
+			yield {
+				type: 'finish',
+				finishReason: 'stop',
+			};
+		}
 	}
 }

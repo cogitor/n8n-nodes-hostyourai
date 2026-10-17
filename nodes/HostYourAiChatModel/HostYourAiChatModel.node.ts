@@ -270,6 +270,20 @@ export class HostYourAiChatModel implements INodeType {
 						statusCode: response.statusCode as number,
 					};
 				},
+				openStream: async (method, url, body, headers) => {
+					const response = (await this.helpers.httpRequestWithAuthentication.call(this, 'hostYourAiApi', {
+						method,
+						url,
+						body,
+						headers,
+						encoding: 'stream',
+						json: false,
+					})) as unknown as AsyncIterableIterator<Buffer | Uint8Array>;
+
+					return {
+						body: response,
+					};
+				},
 			},
 			{
 				url: baseUrl,

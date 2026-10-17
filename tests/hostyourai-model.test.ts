@@ -19,8 +19,14 @@ describe('HostYourAiChatModel', () => {
 		},
 	];
 
-	type RequestFn = ConstructorParameters<typeof HostYourAiChatModel>[1]['httpRequest'];
+	type Requests = ConstructorParameters<typeof HostYourAiChatModel>[1];
+	type RequestFn = Requests['httpRequest'];
+	type OpenStreamFn = Requests['openStream'];
 	type ModelOverrides = Partial<ConstructorParameters<typeof HostYourAiChatModel>[2]>;
+
+	async function* emptyStream(): AsyncIterableIterator<Buffer | Uint8Array> {
+		yield* [];
+	}
 
 	const okResponse = (content = 'ok', finishReason = 'stop') => ({
 		statusCode: 200,
@@ -32,7 +38,13 @@ describe('HostYourAiChatModel', () => {
 		httpRequest: RequestFn,
 		overrides: ModelOverrides = {},
 		modelId = 'hyai/auto',
-	) => new HostYourAiChatModel(modelId, { httpRequest }, { ...baseConfig, ...overrides });
+		openStream?: OpenStreamFn,
+	) =>
+		new HostYourAiChatModel(
+			modelId,
+			{ httpRequest, openStream: openStream ?? (async () => ({ body: emptyStream() })) },
+			{ ...baseConfig, ...overrides },
+		);
 
 	it('applies hyai body params when model is hyai/auto and transport=body', async () => {
 		let capturedBody: Record<string, unknown> | undefined;
@@ -117,7 +129,7 @@ describe('HostYourAiChatModel', () => {
 				body: { choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }] },
 			});
 
-		const model = new HostYourAiChatModel('hyai/auto', { httpRequest }, baseConfig);
+		const model = new HostYourAiChatModel('hyai/auto', { httpRequest, openStream: async () => ({ body: emptyStream() }) }, baseConfig);
 
 		await model.generate(mkMessage());
 		expect(httpRequest).toHaveBeenCalledTimes(2);
@@ -144,7 +156,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest },
+			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
 			{ ...baseConfig, maxColdStartRetries: 1 },
 		);
 
@@ -161,7 +173,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest },
+			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
 			{ ...baseConfig, maxColdStartWaitSeconds: 3 },
 		);
 
@@ -183,7 +195,7 @@ describe('HostYourAiChatModel', () => {
 				body: { choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }] },
 			});
 
-		const model = new HostYourAiChatModel('hyai/auto', { httpRequest }, baseConfig);
+		const model = new HostYourAiChatModel('hyai/auto', { httpRequest, openStream: async () => ({ body: emptyStream() }) }, baseConfig);
 		await model.generate(mkMessage());
 		expect(httpRequest).toHaveBeenCalledTimes(2);
 	});
@@ -205,7 +217,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest },
+			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
 			{ ...baseConfig, maxColdStartWaitSeconds: 1 },
 		);
 		await model.generate(mkMessage());
@@ -283,7 +295,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest },
+			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
 			{ ...baseConfig, maxColdStartWaitSeconds: 1 },
 		);
 		await model.generate(mkMessage());
@@ -306,7 +318,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest },
+			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
 			{ ...baseConfig, maxColdStartWaitSeconds: 3, maxColdStartRetries: 2 },
 		);
 
@@ -373,7 +385,7 @@ describe('HostYourAiChatModel', () => {
 
 		const model = new HostYourAiChatModel(
 			'hyai/auto',
-			{ httpRequest },
+			{ httpRequest, openStream: async () => ({ body: emptyStream() }) },
 			{ ...baseConfig, maxColdStartRetries: Number.NaN, maxColdStartWaitSeconds: Number.NaN },
 		);
 
@@ -381,13 +393,42 @@ describe('HostYourAiChatModel', () => {
 		expect(httpRequest).toHaveBeenCalledTimes(5);
 	});
 
-	it('throws explicit error for streaming calls', async () => {
-		const model = makeModel(vi.fn(async () => okResponse()));
-		const run = async () => {
-			for await (const chunk of model.stream(mkMessage())) {
-				void chunk;
-			}
-		};
-		await expect(run()).rejects.toThrow('streaming is not supported');
+	it('streams text deltas and finish events from SSE', async () => {
+		async function* sseStream(): AsyncIterableIterator<Buffer> {
+			yield Buffer.from('data: {"choices":[{"delta":{"content":"Hel"}}]}\n\n');
+			yield Buffer.from('data: {"choices":[{"delta":{"content":"lo"}}]}\n\n');
+			yield Buffer.from(
+				'data: {"choices":[{"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":1,"completion_tokens":2,"total_tokens":3}}\n\n',
+			);
+			yield Buffer.from('data: [DONE]\n\n');
+		}
+
+		const model = makeModel(
+			vi.fn(async () => okResponse()),
+			{},
+			'hyai/auto',
+			async () => ({ body: sseStream() }),
+		);
+
+		const chunks: Array<{ type: string; delta?: string; finishReason?: string; usage?: unknown }> = [];
+		for await (const chunk of model.stream(mkMessage())) {
+			chunks.push({
+				type: chunk.type,
+				delta: 'delta' in chunk ? chunk.delta : undefined,
+				finishReason: 'finishReason' in chunk ? chunk.finishReason : undefined,
+				usage: 'usage' in chunk ? chunk.usage : undefined,
+			});
+		}
+
+		expect(chunks).toEqual([
+			{ type: 'text-delta', delta: 'Hel', finishReason: undefined, usage: undefined },
+			{ type: 'text-delta', delta: 'lo', finishReason: undefined, usage: undefined },
+			{
+				type: 'finish',
+				delta: undefined,
+				finishReason: 'stop',
+				usage: { promptTokens: 1, completionTokens: 2, totalTokens: 3 },
+			},
+		]);
 	});
 });

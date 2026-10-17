@@ -119,8 +119,8 @@ Quick decision guide:
 
 ## Limitations
 
-- Streaming is not implemented in this node yet.
-- Use non-streaming mode.
+- Streaming is supported for SSE-compatible `chat/completions` responses.
+- Some providers send token usage only on the final chunk; if absent, usage may not be available in stream finish metadata.
 
 ## Troubleshooting
 
