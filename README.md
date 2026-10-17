@@ -1,5 +1,9 @@
 # @cogitor/n8n-nodes-hostyourai
 
+[![npm version](https://img.shields.io/npm/v/%40cogitor%2Fn8n-nodes-hostyourai.svg)](https://www.npmjs.com/package/@cogitor/n8n-nodes-hostyourai)
+[![CI](https://github.com/cogitor/n8n-nodes-hostyourai/actions/workflows/ci.yml/badge.svg)](https://github.com/cogitor/n8n-nodes-hostyourai/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/cogitor/n8n-nodes-hostyourai.svg)](LICENSE)
+
 A [HostYourAI](https://hostyourai.com) Chat Model for n8n AI workflows.
 
 This community package adds one AI Language Model node:
