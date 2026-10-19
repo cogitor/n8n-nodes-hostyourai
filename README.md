@@ -141,4 +141,4 @@ Quick decision guide:
 
 ## License and affiliation
 
-License: [MIT](LICENSE). Not affiliated with or endorsed by HostYourAI or n8n; a personal, unofficial integration.
+License: [MIT](LICENSE). Not affiliated with or endorsed by HostYourAI or n8n.
