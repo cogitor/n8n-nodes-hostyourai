@@ -139,6 +139,6 @@ Quick decision guide:
 - HostYourAI model catalog: https://hostyourai.com/models
 - n8n community node install docs: https://docs.n8n.io/integrations/community-nodes/installation/
 
-## License
+## License and affiliation
 
-[MIT](./LICENSE)
+License: [MIT](LICENSE). Not affiliated with or endorsed by HostYourAI or n8n; a personal, unofficial integration.
